@@ -470,6 +470,32 @@ func JSONMessagesToByteSlices(args []json.RawMessage) [][]byte {
 	return xargs
 }
 
+// LoadKey creates a signing key from the raw private key.
+func LoadKey(privkey []byte) (*SigningKey, error) {
+	if len(privkey) != 32 {
+		return nil, fmt.Errorf(
+			"api: invalid raw private key: got length %d, expected 32",
+			len(privkey),
+		)
+	}
+	raw := [32]byte{}
+	copy(raw[:], privkey)
+	key := &secp256k1.ModNScalar{}
+	overflow := key.SetBytes(&raw)
+	valid := (key.IsZeroBit() | overflow) == 0
+	if !valid {
+		return nil, fmt.Errorf("api: invalid raw private key")
+	}
+	priv := &secp256k1.PrivateKey{
+		Key: *key,
+	}
+	pub := priv.PubKey().SerializeCompressed()
+	return &SigningKey{
+		privateKey: priv,
+		publicKey:  hex.EncodeToString(pub),
+	}, nil
+}
+
 // MustCadenceArgs tries to serialize the given Cadence values and panics with
 // an error if it fails.
 func MustCadenceArgs(args ...cadence.Value) []json.RawMessage {
