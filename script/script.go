@@ -99,6 +99,23 @@ transaction(platform: String, location: String, title: String, description: Stri
     }
 }`
 
+// CreatePlatform defines a Cadence script to create a platform.
+const CreatePlatform = `import Mapp from 0x0000000000000001
+
+transaction(name: String, about: String, image: String, homepage: String, links: {String: String}, tags: [String]) {
+    prepare(signer: AuthAccount) {
+        let ctrl = signer.borrow<&Mapp.Controller>(from: /storage/mapp)
+            ?? panic("Could not borrow a reference to the signer's Mapp.Controller")
+        ctrl.createPlatform(
+            name: name,
+            about: about,
+            image: image,
+            homepage: homepage,
+            links: links,
+            tags: tags)
+    }
+}`
+
 // DeleteCheckin defines a Cadence script to delete a checkin.
 const DeleteCheckin = `@deleteCheckin`
 
